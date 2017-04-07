@@ -120,7 +120,8 @@ class ReportRenderer {
                           `lighthouse-score__value--${scoringMode}`);
 
     element.querySelector('.lighthouse-score__title').textContent = title;
-    element.querySelector('.lighthouse-score__description').textContent = description;
+    element.querySelector('.lighthouse-score__description')
+        .appendChild(this._convertMarkdownLinksToElement(description));
 
     return element;
   }
@@ -178,6 +179,36 @@ class ReportRenderer {
       default:
         throw new Error(`Unknown type: ${details.type}`);
     }
+  }
+
+  /**
+   * @param {string} text
+   * @return {!Element}
+   */
+  _convertMarkdownLinksToElement(text) {
+    const element = this._createElement('span');
+
+    // Split on markdown links (e.g. [some link](https://...)).
+    const parts = text.split(/(\[(.*?)\]\((https?:\/\/.*?)\))/g);
+
+    while (parts.length) {
+      // Remove the same number of elements as there are capture groups.
+      // eslint-disable-next-line no-unused-vars
+      const [preambleText, fullMarkdownLink, linkText, linkHref] = parts.splice(0, 4);
+      element.appendChild(document.createTextNode(preambleText));
+
+      // Append link if there are any.
+      if (linkText && linkHref) {
+        const a = this._createElement('a');
+        a.rel = 'noopener';
+        a.target = '_blank';
+        a.href = linkHref;
+        a.textContent = linkText;
+        element.appendChild(a);
+      }
+    }
+
+    return element;
   }
 
   /**
