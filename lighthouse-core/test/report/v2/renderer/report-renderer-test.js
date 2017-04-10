@@ -20,16 +20,62 @@
 const assert = require('assert');
 const fs = require('fs');
 const jsdom = require('jsdom');
-const ReportRenderer = require('../../../report/v2/report-renderer.js');
-const sampleResults = require('../../results/sample_v2.json');
+const DOM = require('../../../../report/v2/renderer/dom.js');
+const DetailsRenderer = require('../../../../report/v2/renderer/details-renderer.js');
+const ReportRenderer = require('../../../../report/v2/renderer/report-renderer.js');
+const sampleResults = require('../../../results/sample_v2.json');
 
-const TEMPLATE_FILE = fs.readFileSync(__dirname + '/../../../report/v2/templates.html', 'utf8');
+const TEMPLATE_FILE = fs.readFileSync(__dirname + '/../../../../report/v2/templates.html', 'utf8');
 
 describe('ReportRenderer V2', () => {
-  describe('renderReport', () => {
-    const document = jsdom.jsdom(TEMPLATE_FILE);
-    const renderer = new ReportRenderer(document);
+  let renderer;
+  let dom;
 
+  before(() => {
+    global.DOM = DOM;
+    global.DetailsRenderer = DetailsRenderer;
+    const document = jsdom.jsdom(TEMPLATE_FILE);
+    renderer = new ReportRenderer(document);
+    dom = new DOM(document);
+  });
+
+  after(() => {
+    global.DOM = undefined;
+    global.DetailsRenderer = undefined;
+  });
+
+  describe('DOM', () => {
+    describe('createElement', () => {
+      it('creates a simple element using default values', () => {
+        const el = dom.createElement('div');
+        assert.equal(el.localName, 'div');
+        assert.equal(el.className, '');
+        assert.equal(el.className, el.attributes.length);
+      });
+
+      it('creates an element from parameters', () => {
+        const el = dom.createElement(
+            'div', 'class1 class2', {title: 'title attr', tabindex: 0});
+        assert.equal(el.localName, 'div');
+        assert.equal(el.className, 'class1 class2');
+        assert.equal(el.getAttribute('title'), 'title attr');
+        assert.equal(el.getAttribute('tabindex'), '0');
+      });
+    });
+
+    describe('cloneTemplate', () => {
+      it('should clone a template', () => {
+        const clone = dom.cloneTemplate('#tmpl-lighthouse-audit-score');
+        assert.ok(clone.querySelector('.lighthouse-score'));
+      });
+
+      it('fails when template cannot be found', () => {
+        assert.throws(() => dom.cloneTemplate('#unknown-selector'));
+      });
+    });
+  });
+
+  describe('renderReport', () => {
     it('should render a report', () => {
       const output = renderer.renderReport(sampleResults);
       assert.ok(output.classList.contains('lighthouse-report'));
@@ -42,35 +88,6 @@ describe('ReportRenderer V2', () => {
         }
       });
       assert.ok(output.classList.contains('lighthouse-exception'));
-    });
-
-    describe('createElement', () => {
-      it('creates a simple element using default values', () => {
-        const el = renderer._createElement('div');
-        assert.equal(el.localName, 'div');
-        assert.equal(el.className, '');
-        assert.equal(el.className, el.attributes.length);
-      });
-
-      it('creates an element from parameters', () => {
-        const el = renderer._createElement(
-            'div', 'class1 class2', {title: 'title attr', tabindex: 0});
-        assert.equal(el.localName, 'div');
-        assert.equal(el.className, 'class1 class2');
-        assert.equal(el.getAttribute('title'), 'title attr');
-        assert.equal(el.getAttribute('tabindex'), '0');
-      });
-    });
-
-    describe('cloneTemplate', () => {
-      it('should clone a template', () => {
-        const clone = renderer._cloneTemplate('#tmpl-lighthouse-audit-score');
-        assert.ok(clone.querySelector('.lighthouse-score'));
-      });
-
-      it('fails when template cannot be found', () => {
-        assert.throws(() => renderer._cloneTemplate('#unknown-selector'));
-      });
     });
 
     it('renders an audit', () => {
