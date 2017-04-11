@@ -20,16 +20,23 @@
 const assert = require('assert');
 const fs = require('fs');
 const jsdom = require('jsdom');
+const URL = require('../../../lib/url-shim');
 const ReportRenderer = require('../../../report/v2/report-renderer.js');
 const sampleResults = require('../../results/sample_v2.json');
-const URL = window.URL = require('../../../lib/url-shim'); // eslint-disable-line no-unused-vars
 
 const TEMPLATE_FILE = fs.readFileSync(__dirname + '/../../../report/v2/templates.html', 'utf8');
 
 describe('ReportRenderer V2', () => {
+  before(() => {
+    global.URL = URL;
+  });
+
+  after(() => {
+    global.URL = undefined;
+  });
+
   const document = jsdom.jsdom(TEMPLATE_FILE);
   const renderer = new ReportRenderer(document);
-
 
   describe('createElement', () => {
     it('creates a simple element using default values', () => {
