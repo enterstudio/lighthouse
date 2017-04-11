@@ -87,6 +87,13 @@ describe('ReportRenderer V2', () => {
           'and some text afterwards.', 'link with spaces in brackets');
     });
 
+    it('handles invalid urls', () => {
+      const text = 'Text has [bad](https:///) link.';
+      assert.throws(() => {
+        renderer._convertMarkdownLinksToElement(text);
+      });
+    });
+
     it('ignores links that do not start with http', () => {
       const text = 'Sentence with [link](/local/path).';
       const result = renderer._convertMarkdownLinksToElement(text);
