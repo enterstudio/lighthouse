@@ -60,6 +60,11 @@ describe('ReportRenderer V2', () => {
         assert.equal(el.getAttribute('title'), 'title attr');
         assert.equal(el.getAttribute('tabindex'), '0');
       });
+
+      it('omits attributes that are undefined', () => {
+        const el = renderer._createElement('div', '', {title: undefined});
+        assert.equal(el.hasAttribute('title'), false);
+      });
     });
 
     describe('cloneTemplate', () => {
@@ -106,6 +111,39 @@ describe('ReportRenderer V2', () => {
 
       const audits = categoryDOM.querySelectorAll('.lighthouse-category > .lighthouse-audit');
       assert.equal(audits.length, category.audits.length, 'renders correct number of audits');
+    });
+  });
+
+  describe('_renderCards', () => {
+    const document = jsdom.jsdom(TEMPLATE_FILE);
+    const renderer = new ReportRenderer(document);
+
+    const list = {
+      header: {type: 'text', text: 'View details'},
+      items: [
+        {title: 'Total DOM Nodes', value: 3500, target: '1,500 nodes'},
+        {title: 'DOM Depth', value: 10, snippet: 'snippet'},
+        {title: 'Maximum Children', value: 20, snippet: 'snippet2', target: 20}
+      ]
+    };
+
+    it('generates cards dom', () => {
+      const details = renderer._renderCards(list);
+      assert.ok(details.classList.contains('lighthouse-details'));
+      assert.equal(details.querySelector('summary').textContent, 'View details');
+
+      const cards = details.querySelectorAll('.lighthouse-scorecards > .lighthouse-scorecard');
+      assert.ok(cards.length, list.items.length, `renders ${list.items.length} cards`);
+      assert.equal(cards[0].hasAttribute('title'), false,
+          'does not add title attr if snippet is missing');
+      assert.equal(cards[0].querySelector('.lighthouse-scorecard__title').textContent,
+          'Total DOM Nodes', 'fills title');
+      assert.equal(cards[0].querySelector('.lighthouse-scorecard__value').textContent,
+          '3500', 'fills value');
+      assert.equal(cards[0].querySelector('.lighthouse-scorecard__target').textContent,
+          'target: 1,500 nodes', 'fills target');
+      assert.equal(cards[1].getAttribute('title'), 'snippet', 'adds title attribute for snippet');
+      assert.ok(!cards[1].querySelector('.lighthouse-scorecard__target'), 'handles missing target');
     });
   });
 });

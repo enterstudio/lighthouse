@@ -86,7 +86,9 @@ class ReportRenderer {
       element.className = className;
     }
     Object.keys(attrs).forEach(key => {
-      element.setAttribute(key, attrs[key]);
+      if (attrs[key] !== undefined) {
+        element.setAttribute(key, attrs[key]);
+      }
     });
     return element;
   }
@@ -175,6 +177,8 @@ class ReportRenderer {
         return this._renderBlock(details);
       case 'list':
         return this._renderList(details);
+      case 'cards':
+        return this._renderCards(details);
       default:
         throw new Error(`Unknown type: ${details.type}`);
     }
@@ -207,17 +211,45 @@ class ReportRenderer {
    * @return {!Element}
    */
   _renderList(list) {
-    const element = this._createElement('details', 'lighthouse-list');
+    const element = this._createElement('details', 'lighthouse-details lighthouse-list');
     if (list.header) {
-      const summary = this._createElement('summary', 'lighthouse-list__header');
-      summary.textContent = list.header.text;
-      element.appendChild(summary);
+      element.appendChild(this._createElement('summary')).textContent = list.header.text;
     }
 
     const items = this._createElement('div', 'lighthouse-list__items');
     for (const item of list.items) {
       items.appendChild(this._renderDetails(item));
     }
+    element.appendChild(items);
+    return element;
+  }
+
+  /**
+   * @param {!DetailsJSON} list
+   * @return {!Element}
+   */
+  _renderCards(list) {
+    const element = this._createElement('details', 'lighthouse-details');
+    if (list.header) {
+      element.appendChild(this._createElement('summary')).textContent = list.header.text;
+    }
+
+    const items = this._createElement('div', 'lighthouse-scorecards');
+    for (const item of list.items) {
+      const card = items.appendChild(
+          this._createElement('div', 'lighthouse-scorecard', {title: item.snippet}));
+      const titleEl = this._createElement('div', 'lighthouse-scorecard__title');
+      const valueEl = this._createElement('div', 'lighthouse-scorecard__value');
+      const targetEl = this._createElement('div', 'lighthouse-scorecard__target');
+
+      card.appendChild(titleEl).textContent = item.title;
+      card.appendChild(valueEl).textContent = item.value;
+
+      if (item.target) {
+        card.appendChild(targetEl).textContent = `target: ${item.target}`;
+      }
+    }
+
     element.appendChild(items);
     return element;
   }
