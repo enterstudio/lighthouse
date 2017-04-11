@@ -59,12 +59,23 @@ describe('ReportRenderer V2', () => {
   });
 
   describe('_convertMarkdownLinksToElement', () => {
-    it('converts links', () => {
-      const result = renderer._convertMarkdownLinksToElement(
+    it('correctly converts links', () => {
+      let result = renderer._convertMarkdownLinksToElement(
           'Some [link](https://example.com/foo). [Learn more](http://example.com).');
       assert.equal(result.innerHTML,
           'Some <a rel="noopener" target="_blank" href="https://example.com/foo">link</a>. ' +
           '<a rel="noopener" target="_blank" href="http://example.com">Learn more</a>.');
+
+      result = renderer._convertMarkdownLinksToElement('[link](https://example.com/foo)');
+      assert.equal(result.innerHTML,
+          '<a rel="noopener" target="_blank" href="https://example.com/foo">link</a>',
+          'just a link');
+
+      result = renderer._convertMarkdownLinksToElement(
+          '[ Link ](https://example.com/foo) and some text afterwards.');
+      assert.equal(result.innerHTML,
+          '<a rel="noopener" target="_blank" href="https://example.com/foo"> Link </a> ' +
+          'and some text afterwards.', 'link with spaces in brackets');
     });
 
     it('ignores links that do not start with http', () => {

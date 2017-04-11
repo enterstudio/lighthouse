@@ -183,18 +183,17 @@ class ReportRenderer {
 
   /**
    * @param {string} text
-   * @return {!Element}
+   * @return {!HTMLSpanElement}
    */
   _convertMarkdownLinksToElement(text) {
     const element = this._createElement('span');
 
     // Split on markdown links (e.g. [some link](https://...)).
-    const parts = text.split(/(\[(.*?)\]\((https?:\/\/.*?)\))/g);
+    const parts = text.split(/\[(.*?)\]\((https?:\/\/.*?)\)/g);
 
     while (parts.length) {
-      // Remove the same number of elements as there are capture groups.
-      // eslint-disable-next-line no-unused-vars
-      const [preambleText, fullMarkdownLink, linkText, linkHref] = parts.splice(0, 4);
+      // Pop off the same number of elements as there are capture groups.
+      const [preambleText, linkText, linkHref] = parts.splice(0, 3);
       element.appendChild(this._document.createTextNode(preambleText));
 
       // Append link if there are any.
