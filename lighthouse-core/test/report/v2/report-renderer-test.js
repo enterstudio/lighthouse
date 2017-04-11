@@ -22,12 +22,14 @@ const fs = require('fs');
 const jsdom = require('jsdom');
 const ReportRenderer = require('../../../report/v2/report-renderer.js');
 const sampleResults = require('../../results/sample_v2.json');
+const URL = window.URL = require('../../../lib/url-shim'); // eslint-disable-line no-unused-vars
 
 const TEMPLATE_FILE = fs.readFileSync(__dirname + '/../../../report/v2/templates.html', 'utf8');
 
 describe('ReportRenderer V2', () => {
   const document = jsdom.jsdom(TEMPLATE_FILE);
   const renderer = new ReportRenderer(document);
+
 
   describe('createElement', () => {
     it('creates a simple element using default values', () => {
@@ -64,7 +66,7 @@ describe('ReportRenderer V2', () => {
           'Some [link](https://example.com/foo). [Learn more](http://example.com).');
       assert.equal(result.innerHTML,
           'Some <a rel="noopener" target="_blank" href="https://example.com/foo">link</a>. ' +
-          '<a rel="noopener" target="_blank" href="http://example.com">Learn more</a>.');
+          '<a rel="noopener" target="_blank" href="http://example.com/">Learn more</a>.');
 
       result = renderer._convertMarkdownLinksToElement('[link](https://example.com/foo)');
       assert.equal(result.innerHTML,
@@ -76,6 +78,12 @@ describe('ReportRenderer V2', () => {
       assert.equal(result.innerHTML,
           '<a rel="noopener" target="_blank" href="https://example.com/foo"> Link </a> ' +
           'and some text afterwards.', 'link with spaces in brackets');
+    });
+
+    it('handles invalid urls', () => {
+      const text = 'Text has [bad](https:///) link.';
+      const result = renderer._convertMarkdownLinksToElement(text);
+      assert.equal(result.innerHTML, 'Text has bad link.');
     });
 
     it('ignores links that do not start with http', () => {
