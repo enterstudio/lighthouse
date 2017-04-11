@@ -202,12 +202,8 @@ class ReportRenderer {
         a.rel = 'noopener';
         a.target = '_blank';
         a.textContent = linkText;
-        try {
-          a.href = (new URL(linkHref)).href;
-          element.appendChild(a);
-        } catch (e) {
-          element.appendChild(this._document.createTextNode(linkText));
-        }
+        a.href = (new URL(linkHref)).href;
+        element.appendChild(a);
       }
     }
 
