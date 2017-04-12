@@ -123,7 +123,6 @@ function convertImport(src) {
         return '"use strict";\n';
       }
 
-      // adjust and transpile for usage in node 4+
       function minify(dest, scriptsContent) {
         return babel.transform(scriptsContent, {
           comments: false, // Output comments in generated output.
